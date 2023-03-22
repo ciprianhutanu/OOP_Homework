@@ -1,6 +1,8 @@
 #include <iostream>
 #include <cstring>
 #include <stdlib.h>
+#include <random>
+#include <Windows.h>
 
 class Jucator {
     std::string nume, prenume;
@@ -14,12 +16,12 @@ public:
     Jucator(std::string, std::string, char, int);
     Jucator(std::string, std::string, char, float, double, int, int);
     Jucator(std::string, std::string, char, float, double, int, int, int, int, int, bool);
+    Jucator(const Jucator&);
 
     Jucator& operator=(const Jucator&);
     friend std::istream& operator>>(std::istream&, Jucator&);
     friend std::ostream& operator<<(std::ostream&, const Jucator&);
-    //Jucator operator[](int);
-    //friend Echipa operator+(Echipa, Jucator);
+    char operator[](int);
     Jucator operator++();
     Jucator operator++(int);
     Jucator operator+(const Jucator&);
@@ -32,7 +34,9 @@ public:
     bool operator<(const Jucator&);
     bool operator==(const Jucator&);
 
-    void douaGalbene() { if (this->numarCGalbene == 2) this->numarCRosii++, this->cartonasRosu = true; }
+    void douaGalbene() { this->numarCGalbene++; if (this->numarCGalbene == 2) this->numarCRosii++, this->cartonasRosu = true, this->numarCGalbene = 0; }
+    void cresteCGalbene() { this->numarCGalbene++; }
+    void cresteCRosii() { this->numarCRosii; }
 
     void setNume(std::string nume) { this->nume = nume; }
     void setPrenume(std::string prenume) { this->prenume = prenume; }
@@ -48,7 +52,7 @@ public:
     float getInaltime() { return this->inaltime; }
     bool getCartonasRosu() { return this->cartonasRosu; }
 
-
+    ~Jucator();
 };
 
 Jucator::Jucator() {
@@ -107,6 +111,20 @@ Jucator::Jucator(std::string nume, std::string prenume, char pozitie, float inal
     this->cartonasRosu = cartonasRosu;
 }
 
+Jucator::Jucator(const Jucator& obj) {
+    this->nume = obj.nume;
+    this->prenume = obj.prenume;
+    this->pozitie = obj.pozitie;
+    this->inaltime = obj.inaltime;
+    this->greutate = obj.greutate;
+    this->numarTricou = obj.numarTricou;
+    this->numarCGalbene = obj.numarCGalbene;
+    this->numarCRosii = obj.numarCRosii;
+    this->varsta = obj.varsta;
+    this->numarGoluri = obj.numarGoluri;
+    this->cartonasRosu = obj.cartonasRosu;
+}
+
 Jucator& Jucator::operator=(const Jucator& obj) {
     this->nume = obj.nume;
     this->prenume = obj.prenume;
@@ -137,12 +155,6 @@ std::istream& operator>>(std::istream& in, Jucator& obj) {
     in >> obj.inaltime;
     std::cout << "Greutate: ";
     in >> obj.greutate;
-    std::cout << "Numar goluri: ";
-    in >> obj.numarGoluri;
-    std::cout << "Numar cartonase galbene: ";
-    in >> obj.numarCGalbene;
-    std::cout << "Numar cartonase rosii: ";
-    in >> obj.numarCRosii;
     return in;
 }
 
@@ -167,8 +179,14 @@ Jucator Jucator::operator++() {
 
 Jucator Jucator::operator++(int) {
     Jucator copie(*this);
-    (*this)++;
+    ++(*this);
     return copie;
+}
+
+char Jucator::operator[](int i) {
+    if (i < 0 or i >= this->nume.size())
+        throw std::runtime_error("Index in afara vectorului");
+    return this->nume.at(i);
 }
 
 Jucator Jucator::operator+(const Jucator& obj) {
@@ -247,27 +265,44 @@ bool Jucator::operator==(const Jucator& obj) {
     return true;
 }
 
+Jucator::~Jucator() {
+    this->nume = "";
+    this->prenume = "";
+    this->pozitie = 0;
+    this->inaltime = 0;
+    this->greutate = 0;
+    this->numarTricou = 0;
+    this->numarCGalbene = 0;
+    this->numarCRosii = 0;
+    this->varsta = 0;
+    this->numarGoluri = 0;
+    this->cartonasRosu = 0;
+}
+
 class Echipa {
     static int cIDEchipa;
     const int idEchipa;
     std::string numeEchipa;
     std::string abreviereEchipa;
     char* orasEchipa;
-    int numarTitulari, numarRezerve, puncte, victorii, egaluri, infrangeri, golaveraj;
+    int numarTitulari, puncte, victorii, egaluri, infrangeri, golaveraj;
     Jucator* listaTitulari;
-    Jucator* listaRezerve;
+
 public:
     Echipa();
     Echipa(std::string, std::string, char*);
-    Echipa(std::string, std::string, char*, int, int, Jucator*, Jucator*);
-    Echipa(std::string, std::string, char*, int, int, int, int, int, int, int, Jucator*, Jucator*);
+    Echipa(std::string, std::string, char*, int, Jucator*);
+    Echipa(std::string, std::string, char*, int, int, int, int, int, int, Jucator*);
     Echipa(const Echipa&);
 
     Echipa& operator=(const Echipa&);
     friend std::istream& operator>>(std::istream&, Echipa&);
     friend std::ostream& operator<<(std::ostream&, const Echipa&);
-    Jucator operator[](int);
+    Jucator* operator[](int);
     friend Echipa operator+(Echipa, Jucator);
+    friend Echipa operator+(Jucator, Echipa);
+    friend Echipa operator-(Echipa, Jucator);
+    friend Echipa operator-(Jucator, Echipa);
     Echipa operator++();
     Echipa operator++(int);
     Echipa operator+(const Echipa&);
@@ -280,9 +315,20 @@ public:
     bool operator<(const Echipa&);
     bool operator==(const Echipa&);
 
-    void calculPuncte();
+    void calculPuncte() { this->puncte = this->egaluri + 3 * this->victorii; };
+    void cresteVictorii() { this->victorii++; }
+    void cresteInfrangeri() { this->infrangeri++; }
+    void cresteEgaluri() { this->egaluri++; }
+    void cresteGolaveraj(int x) { this->golaveraj += x; }
 
-    //~Echipa();
+    int getNrJucatori() { return this->numarTitulari; }
+    int getNrPuncte() { return this->puncte; }
+    int getGolaveraj() { return this->golaveraj; }
+    Jucator getListaTitulari() { return *this->listaTitulari; }
+    std::string getAbreviere() { return this->abreviereEchipa; }
+    std::string getNumeEchipa() { return this->numeEchipa; }
+
+    ~Echipa();
 };
 
 int Echipa::cIDEchipa = 1;
@@ -293,14 +339,12 @@ Echipa::Echipa() :idEchipa(cIDEchipa++) {
     this->orasEchipa = new char[strlen("Nedefinit") + 1];
     strcpy(this->orasEchipa, "Nedefinit");
     this->numarTitulari = 0;
-    this->numarRezerve = 0;
     this->puncte = 0;
     this->victorii = 0;
     this->egaluri = 0;
     this->infrangeri = 0;
     this->golaveraj = 0;
     this->listaTitulari = NULL;
-    this->listaRezerve = NULL;
 }
 
 Echipa::Echipa(std::string numeEchipa, std::string abreviereEchipa, char* orasEchipa) :idEchipa(cIDEchipa++) {
@@ -309,23 +353,20 @@ Echipa::Echipa(std::string numeEchipa, std::string abreviereEchipa, char* orasEc
     this->orasEchipa = new char[strlen(orasEchipa) + 1];
     strcpy(this->orasEchipa, orasEchipa);
     this->numarTitulari = 0;
-    this->numarRezerve = 0;
     this->puncte = 0;
     this->victorii = 0;
     this->egaluri = 0;
     this->infrangeri = 0;
     this->golaveraj = 0;
     this->listaTitulari = NULL;
-    this->listaRezerve = NULL;
 }
 
-Echipa::Echipa(std::string numeEchipa, std::string abreviereEchipa, char* orasEchipa, int numarTitulari, int numarRezerve, Jucator* listaTitulari, Jucator* listaRezerve) :idEchipa(cIDEchipa++) {
+Echipa::Echipa(std::string numeEchipa, std::string abreviereEchipa, char* orasEchipa, int numarTitulari, Jucator* listaTitulari) :idEchipa(cIDEchipa++) {
     this->numeEchipa = numeEchipa;
     this->abreviereEchipa = abreviereEchipa;
     this->orasEchipa = new char[strlen(orasEchipa) + 1];
     strcpy(this->orasEchipa, orasEchipa);
     this->numarTitulari = numarTitulari;
-    this->numarRezerve = numarRezerve;
     this->puncte = 0;
     this->victorii = 0;
     this->egaluri = 0;
@@ -335,19 +376,14 @@ Echipa::Echipa(std::string numeEchipa, std::string abreviereEchipa, char* orasEc
     for (int i = 0; i < numarTitulari; i++) {
         this->listaTitulari[i] = listaTitulari[i];
     }
-    this->listaRezerve = new Jucator[numarRezerve];
-    for (int i = 0; i < numarRezerve; i++) {
-        this->listaRezerve[i] = listaRezerve[i];
-    }
 }
 
-Echipa::Echipa(std::string numeEchipa, std::string abreviereEchipa, char* orasEchipa, int numarTitulari, int numarRezerve, int puncte, int victorii, int egaluri, int infrangeri, int golaveraj, Jucator* listaTitulari, Jucator* listaRezerve) :idEchipa(cIDEchipa++) {
+Echipa::Echipa(std::string numeEchipa, std::string abreviereEchipa, char* orasEchipa, int numarTitulari, int puncte, int victorii, int egaluri, int infrangeri, int golaveraj, Jucator* listaTitulari) :idEchipa(cIDEchipa++) {
     this->numeEchipa = numeEchipa;
     this->abreviereEchipa = abreviereEchipa;
     this->orasEchipa = new char[strlen(orasEchipa) + 1];
     strcpy(this->orasEchipa, orasEchipa);
     this->numarTitulari = numarTitulari;
-    this->numarRezerve = numarRezerve;
     this->puncte = puncte;
     this->victorii = victorii;
     this->egaluri = egaluri;
@@ -357,10 +393,6 @@ Echipa::Echipa(std::string numeEchipa, std::string abreviereEchipa, char* orasEc
     for (int i = 0; i < numarTitulari; i++) {
         this->listaTitulari[i] = listaTitulari[i];
     }
-    this->listaRezerve = new Jucator[numarRezerve];
-    for (int i = 0; i < numarRezerve; i++) {
-        this->listaRezerve[i] = listaRezerve[i];
-    }
 }
 
 Echipa::Echipa(const Echipa& obj) :idEchipa(obj.idEchipa) {
@@ -369,7 +401,6 @@ Echipa::Echipa(const Echipa& obj) :idEchipa(obj.idEchipa) {
     this->orasEchipa = new char[strlen(obj.orasEchipa) + 1];
     strcpy(this->orasEchipa, obj.orasEchipa);
     this->numarTitulari = obj.numarTitulari;
-    this->numarRezerve = obj.numarRezerve;
     this->puncte = obj.puncte;
     this->victorii = obj.victorii;
     this->egaluri = obj.egaluri;
@@ -378,10 +409,6 @@ Echipa::Echipa(const Echipa& obj) :idEchipa(obj.idEchipa) {
     this->listaTitulari = new Jucator[obj.numarTitulari];
     for (int i = 0; i < obj.numarTitulari; i++) {
         this->listaTitulari[i] = obj.listaTitulari[i];
-    }
-    this->listaRezerve = new Jucator[obj.numarRezerve];
-    for (int i = 0; i < obj.numarRezerve; i++) {
-        this->listaRezerve[i] = obj.listaRezerve[i];
     }
 }
 
@@ -395,7 +422,6 @@ Echipa& Echipa::operator=(const Echipa& obj) {
     this->orasEchipa = new char[strlen(obj.orasEchipa) + 1];
     strcpy(this->orasEchipa, obj.orasEchipa);
     this->numarTitulari = obj.numarTitulari;
-    this->numarRezerve = obj.numarRezerve;
     this->puncte = obj.puncte;
     this->victorii = obj.victorii;
     this->egaluri = obj.egaluri;
@@ -408,14 +434,6 @@ Echipa& Echipa::operator=(const Echipa& obj) {
     this->listaTitulari = new Jucator[obj.numarTitulari];
     for (int i = 0; i < obj.numarTitulari; i++) {
         this->listaTitulari[i] = obj.listaTitulari[i];
-    }
-    if (this->listaRezerve != NULL) {
-        delete[] this->listaRezerve;
-        this->listaRezerve = NULL;
-    }
-    this->listaRezerve = new Jucator[obj.numarRezerve];
-    for (int i = 0; i < obj.numarRezerve; i++) {
-        this->listaRezerve[i] = obj.listaRezerve[i];
     }
     return *this;
 }
@@ -434,39 +452,17 @@ std::istream& operator>>(std::istream& in, Echipa& obj) {
     }
     obj.orasEchipa = new char[strlen(oras) + 1];
     strcpy(obj.orasEchipa, oras);
-    std::cout << "Numar titular: ";
+    std::cout << "Numar titulari: ";
     in >> obj.numarTitulari;
-    std::cout << "Numar rezerve: ";
-    in >> obj.numarRezerve;
-    do {
-        std::cout << "Numar puncte: ";
-        in >> obj.puncte;
-        std::cout << "Numar victorii: ";
-        in >> obj.victorii;
-        std::cout << "Numar egaluri: ";
-        in >> obj.egaluri;
-        std::cout << "Numar infrangeri: ";
-        in >> obj.infrangeri;
-    } while (3 * obj.victorii + obj.egaluri != obj.puncte);
-    std::cout << "Golaveraj: ";
-    in >> obj.golaveraj;
     if (obj.listaTitulari != NULL) {
         delete[] obj.listaTitulari;
         obj.listaTitulari = NULL;
     }
     obj.listaTitulari = new Jucator[obj.numarTitulari];
     for (int i = 0; i < obj.numarTitulari; i++) {
-        std::cout << "Titular " << i << ": ";
+        system("CLS");
+        std::cout << "Titular " << i << ": \n";
         in >> obj.listaTitulari[i];
-    }
-    if (obj.listaRezerve != NULL) {
-        delete[] obj.listaRezerve;
-        obj.listaRezerve = NULL;
-    }
-    obj.listaRezerve = new Jucator[obj.numarRezerve];
-    for (int i = 0; i < obj.numarRezerve; i++) {
-        std::cout << "RES: ";
-        in >> obj.listaRezerve[i];
     }
     return in;
 }
@@ -476,63 +472,79 @@ std::ostream& operator<<(std::ostream& out, const Echipa& obj) {
     out << "Abreviere echipa: " << obj.abreviereEchipa << '\n';
     out << "Oras echipa: " << obj.orasEchipa << '\n';
     out << "Numar titular: " << obj.numarTitulari << '\n';
-    out << "Numar rezerve: " << obj.numarRezerve << '\n';
     out << "Numar puncte: " << obj.puncte << '\n';
     out << "Numar victorii: " << obj.victorii << '\n';
     out << "Numar egaluri: " << obj.egaluri << '\n';
     out << "Numar infrangeri: " << obj.infrangeri << '\n';
     out << "Golaveraj: " << obj.golaveraj << '\n';
     for (int i = 0; i < obj.numarTitulari; i++) {
-        out << obj.listaTitulari[i];
-    }
-    for (int i = 0; i < obj.numarRezerve; i++) {
-        out << obj.listaRezerve[i];
+        out <<'\n' << obj.listaTitulari[i];
     }
     return out;
 }
 
-Jucator Echipa::operator[](int i) {
-    if (this->listaTitulari == NULL and this->listaRezerve == NULL)
+Jucator* Echipa::operator[](int i) {
+    if (this->listaTitulari == NULL)
         throw std::runtime_error("Nu exista jucatori");
-    if (this->listaTitulari != NULL) {
-        for (int j = 0; j < numarTitulari; j++)
-            if (int(this->listaTitulari[j]) == i)
-                return this->listaTitulari[j];
-    }
-    else
-        if (this->listaRezerve != NULL) {
-            for (int j = 0; j < numarRezerve; j++)
-                if (int(this->listaRezerve[j]) == i)
-                    return this->listaRezerve[j];
-        }
-        else
-            throw std::runtime_error("Niciun jucator nu poarta tricoul cu numarul i");
+    if (0 > i or i >= this->numarTitulari)
+        throw std::runtime_error("Index in afara vectorului");
+    return &(this->listaTitulari[i]);
 }
 
 Echipa operator+(Echipa ech, Jucator juc) {
     Echipa rezultat(ech);
-    rezultat.numarRezerve++;
-    if (rezultat.listaRezerve != NULL) {
-        delete[] rezultat.listaRezerve;
-        rezultat.listaRezerve = NULL;
+    rezultat.numarTitulari++;
+    if (rezultat.listaTitulari != NULL) {
+        delete[] rezultat.listaTitulari;
+        rezultat.listaTitulari = NULL;
     }
-    rezultat.listaRezerve = new Jucator[rezultat.numarRezerve];
-    for (int i = 0; i < rezultat.numarRezerve - 1; i++)
-        rezultat.listaRezerve[i] = ech.listaRezerve[i];
-    rezultat.listaRezerve[rezultat.numarRezerve - 1] = juc;
+    rezultat.listaTitulari = new Jucator[rezultat.numarTitulari];
+    for (int i = 0; i < rezultat.numarTitulari - 1; i++)
+        rezultat.listaTitulari[i] = ech.listaTitulari[i];
+    rezultat.listaTitulari[rezultat.numarTitulari - 1] = juc;
     return rezultat;
 }
+
+Echipa operator+(Jucator juc, Echipa ech) {
+    return ech + juc;
+}
+
+Echipa operator-(Echipa ech, Jucator juc) {
+    Echipa rezultat(ech);
+    for (int j = 0; j < rezultat.numarTitulari; j++)
+        if (*rezultat[j] == juc) {
+            for (int k = j; k < rezultat.numarTitulari - 1; k++)
+                rezultat.listaTitulari[k] = rezultat.listaTitulari[k + 1];
+            break;
+        }
+    rezultat.numarTitulari--;
+    Echipa copie(rezultat);
+    if (rezultat.listaTitulari != NULL) {
+        delete[] rezultat.listaTitulari;
+        rezultat.listaTitulari = NULL;
+    }
+    rezultat.listaTitulari = new Jucator[rezultat.numarTitulari];
+    for (int j = 0; j < rezultat.numarTitulari; j++)
+        rezultat.listaTitulari[j] = copie.listaTitulari[j];
+    return rezultat;
+}
+
+Echipa operator-(Jucator juc, Echipa ech) {
+    return ech - juc;
+}
+
 
 Echipa Echipa::operator++() {
     Jucator juc;
     std::cout << "Introduceti un jucator:\n";
     std::cin >> juc;
-    return *this + juc;
+    *this = *this + juc;
+    return *this;
 }
 
 Echipa Echipa::operator++(int) {
     Echipa copie(*this);
-    (* this)++;
+    ++(*this);
     return copie;
 }
 
@@ -556,7 +568,6 @@ Echipa Echipa::operator+(const Echipa& obj) {
         }
     }
     rezultat.numarTitulari += obj.numarTitulari;
-    rezultat.numarRezerve += obj.numarRezerve;
     rezultat.puncte += obj.puncte;
     rezultat.victorii += obj.victorii;
     rezultat.egaluri += obj.egaluri;
@@ -572,17 +583,6 @@ Echipa Echipa::operator+(const Echipa& obj) {
             rezultat.listaTitulari[i] = this->listaTitulari[i];
         else
             rezultat.listaTitulari[i] = obj.listaTitulari[i - this->numarTitulari];
-    }
-    if (rezultat.listaRezerve != NULL) {
-        delete[] rezultat.listaRezerve;
-        rezultat.listaRezerve = NULL;
-    }
-    rezultat.listaRezerve = new Jucator[rezultat.numarRezerve];
-    for (int i = 0; i < rezultat.numarRezerve; i++) {
-        if (i < this->numarRezerve)
-            rezultat.listaRezerve[i] = this->listaRezerve[i];
-        else
-            rezultat.listaRezerve[i] = obj.listaRezerve[i - this->numarRezerve];
     }
     return rezultat;
 }
@@ -622,41 +622,21 @@ Echipa Echipa::operator-(const Echipa& obj) {
                 if (this->listaTitulari[i] != obj.listaTitulari[j])
                     rezultat.listaTitulari[k++] = this->listaTitulari[i];
     }
-    cnt = 0;
-    k = 0;
-    if (this->listaRezerve != NULL and obj.listaRezerve != NULL) {
-        for (i = 0; i < this->numarRezerve; i++)
-            for (j = 0; j < obj.numarRezerve; j++)
-                if (this->listaRezerve[i] == obj.listaRezerve[j])
-                    cnt++;
-    }
-    if (cnt != 0) {
-        rezultat.numarRezerve -= cnt;
-        if (rezultat.listaRezerve != NULL) {
-            delete[] rezultat.listaRezerve;
-            rezultat.listaRezerve = NULL;
-        }
-        rezultat.listaRezerve = new Jucator[rezultat.numarRezerve];
-        for (i = 0; i < this->numarRezerve; i++)
-            for (j = 0; j < obj.numarRezerve; j++)
-                if (this->listaRezerve[i] != obj.listaRezerve[j])
-                    rezultat.listaRezerve[k++] = this->listaRezerve[i];
-    }
     return rezultat;
 }
 
 Echipa Echipa::operator-(int x) {
     Echipa rezultat(*this);
-    if (rezultat.numarRezerve - x < 0)
+    if (rezultat.numarTitulari - x < 0)
         throw std::runtime_error("Scaderea returneaza rezultat negativ");
-    rezultat.numarRezerve -= x;
-    if (rezultat.listaRezerve != NULL) {
-        delete[] rezultat.listaRezerve;
-        rezultat.listaRezerve = NULL;
+    rezultat.numarTitulari -= x;
+    if (rezultat.listaTitulari != NULL) {
+        delete[] rezultat.listaTitulari;
+        rezultat.listaTitulari = NULL;
     }
-    rezultat.listaRezerve = new Jucator[rezultat.numarRezerve];
-    for (int i = 0; i < rezultat.numarRezerve; i++) {
-        rezultat.listaRezerve[i] = this->listaRezerve[i];
+    rezultat.listaTitulari = new Jucator[rezultat.numarTitulari];
+    for (int i = 0; i < rezultat.numarTitulari; i++) {
+        rezultat.listaTitulari[i] = this->listaTitulari[i];
     }
     return rezultat;
 }
@@ -666,11 +646,60 @@ Echipa operator-(int x, Echipa obj) {
 }
 
 Echipa::operator int() {
-    return this->numarRezerve + this->numarTitulari;
+    return this->puncte;
 }
 
 bool Echipa::operator==(const Echipa& obj) {
+    if (this->numeEchipa != obj.numeEchipa)
+        return false;
+    if (this->abreviereEchipa != obj.abreviereEchipa)
+        return false;
+    if (this->orasEchipa != NULL and obj.orasEchipa != NULL) {
+        if (strlen(this->orasEchipa) != strlen(obj.orasEchipa))
+            return false;
+        for (int i = 0; i < strlen(this->orasEchipa); i++)
+            if (this->orasEchipa[i] != obj.orasEchipa[i])
+                return false;
+    }
+    else
+        if (this->orasEchipa != NULL or obj.orasEchipa != NULL)
+            return false;
+    if (this->puncte != obj.puncte)
+        return false;
+    if (this->victorii != obj.victorii)
+        return false;
+    if (this->egaluri != obj.egaluri)
+        return false;
+    if (this->infrangeri != obj.infrangeri)
+        return false;
+    if (this->golaveraj != obj.golaveraj)
+        return false;
+    if (this->numarTitulari != obj.numarTitulari)
+        return false;
+    if (this->listaTitulari != NULL and obj.listaTitulari != NULL) {
+        for (int i = 0; i < this->numarTitulari; i++)
+            if (this->listaTitulari[i] != obj.listaTitulari[i])
+                return false;
+    }
+    else
+        if (this->listaTitulari != NULL or obj.listaTitulari != NULL)
+            return false;
+    return true;
+}
 
+bool Echipa::operator<(const Echipa& obj) {
+    return this->puncte < obj.puncte;
+}
+
+Echipa::~Echipa() {
+    if (this->orasEchipa != NULL) {
+        delete[] this->orasEchipa;
+        this->orasEchipa = NULL;
+    }
+    if (this->listaTitulari != NULL) {
+        delete[] this->listaTitulari;
+        this->listaTitulari = NULL;
+    }
 }
 
 class Competitie {
@@ -688,7 +717,9 @@ public:
     Competitie& operator=(const Competitie&);
     friend std::istream& operator>>(std::istream&, Competitie&);
     friend std::ostream& operator<<(std::ostream&, const Competitie&);
-    Echipa operator[](int);
+    friend Competitie operator-(Competitie, Echipa);
+    friend Competitie operator-(Echipa, Competitie);
+    Echipa* operator[](int);
     Competitie operator++();
     Competitie operator++(int);
     Competitie operator+(const Competitie&);
@@ -809,12 +840,36 @@ std::ostream& operator<<(std::ostream& out, const Competitie& obj) {
     return out;
 }
 
-Echipa Competitie::operator[](int i) {
+Echipa* Competitie::operator[](int i) {
     if (this->listaEchipe == NULL)
         throw std::runtime_error("Nu exista echipe");
     if (this->numarEchipe <= i or i < 0)
         throw std::runtime_error("Index in afara vectorului");
-    return this->listaEchipe[i];
+    return &(this->listaEchipe[i]);
+}
+
+Competitie operator-(Competitie comp, Echipa ech) {
+    Competitie rezultat(comp);
+    for (int j = 0; j < rezultat.numarEchipe; j++)
+        if (*rezultat[j] == ech) {
+            for (int k = j; k < rezultat.numarEchipe - 1; k++)
+                rezultat.listaEchipe[k] = rezultat.listaEchipe[k + 1];
+            break;
+        }
+    rezultat.numarEchipe--;
+    Competitie copie(rezultat);
+    if (rezultat.listaEchipe != NULL) {
+        delete[] rezultat.listaEchipe;
+        rezultat.listaEchipe = NULL;
+    }
+    rezultat.listaEchipe = new Echipa[rezultat.numarEchipe];
+    for (int j = 0; j < rezultat.numarEchipe; j++)
+        rezultat.listaEchipe[j] = copie.listaEchipe[j];
+    return rezultat;
+}
+
+Competitie operator-(Echipa ech, Competitie comp) {
+    return comp - ech;
 }
 
 Competitie Competitie::operator++() {
@@ -893,9 +948,9 @@ Competitie operator+(int x, Competitie obj) {
     return obj + x;
 }
 
-/*Competitie Competitie::operator-(const Competitie& obj) {
+Competitie Competitie::operator-(const Competitie& obj) {
     Competitie rezultat(*this);
-    int cnt = 0, i, j, k=0;
+    int cnt = 0, i, j, k = 0;
     if (this->listaEchipe != NULL and obj.listaEchipe != NULL) {
         for (i = 0; i < this->numarEchipe; i++)
             for (j = 0; j < obj.numarEchipe; j++)
@@ -915,7 +970,7 @@ Competitie operator+(int x, Competitie obj) {
                     rezultat.listaEchipe[k++] = this->listaEchipe[i];
     }
     return rezultat;
-}*/
+}
 
 Competitie Competitie::operator-(int x) {
     if (this->numarEchipe - x < 0)
@@ -952,10 +1007,10 @@ bool Competitie::operator==(const Competitie& obj) {
         return false;
     if (this->numarEchipe != obj.numarEchipe)
         return false;
-    // if (this->listaEchipe != NULL and obj.listaEchipe != NULL)
-        // for (i = 0; i < this->numarEchipe; i++)
-             //if (this->listaEchipe[i] != obj.listaEchipe[i])
-                //return false;
+    if (this->listaEchipe != NULL and obj.listaEchipe != NULL)
+        for (i = 0; i < this->numarEchipe; i++)
+            if (this->listaEchipe[i] != obj.listaEchipe[i])
+                return false;
     return true;
 }
 
@@ -998,6 +1053,43 @@ Echipa* Competitie::getEchipe() {
     return this->listaEchipe;
 }
 
+void Competitie::clasament() {
+    Echipa* listae;
+    listae = new Echipa[this->numarEchipe];
+    for (int i = 0; i < this->numarEchipe; i++) {
+        listae[i] = this->listaEchipe[i];
+    }
+    std::cout << "E\tP\tG\t\n";
+    int n = this->numarEchipe, mxp = -1, mxg = -1;
+    while (n > 0) {
+        mxp = -1;
+        mxg = -1;
+        for (int i = 0; i < n; i++) {
+            if (listae[i].getNrPuncte() > mxp)
+            {
+                mxp = listae[i].getNrPuncte();
+                mxg = listae[i].getGolaveraj();
+            }
+            else
+                if (listae[i].getNrPuncte() == mxp and listae[i].getGolaveraj() > mxg) {
+                    mxg = listae[i].getGolaveraj();
+                }
+        }
+        for (int i = 0; i < n; i++) {
+            if (listae[i].getNrPuncte() == mxp and listae[i].getGolaveraj() == mxg) {
+                std::cout << listae[i].getAbreviere() << '\t' << listae[i].getNrPuncte() << '\t' << listae[i].getGolaveraj() << '\n';
+                for (int j = i; j < n - 1; j++)
+                {
+                    listae[j] = listae[j + 1];
+                }
+                break;
+            }
+        }
+        n--;
+    }
+    delete[] listae;
+}
+
 Competitie::~Competitie() {
     if (this->denumire != NULL) {
         delete[] this->denumire;
@@ -1009,13 +1101,409 @@ Competitie::~Competitie() {
     }
 }
 
+class Meci {
+    Echipa* echipa1;
+    Echipa* echipa2;
+    int* listaJucatori1;
+    int* listaJucatori2;
+    int scorEchipa1, scorEchipa2, nrevenimente, minut;
+    char evenimente[100][100];
+public:
+    Meci();
+    Meci(Echipa*, Echipa*);
+
+    friend std::ostream& operator<<(std::ostream&, const Meci&);
+
+    void simulareMeci();
+
+    ~Meci();
+};
+
+Meci::Meci() {
+    this->echipa1 = NULL;
+    this->echipa2 = NULL;
+    this->listaJucatori1 = NULL;
+    this->listaJucatori2 = NULL;
+    this->scorEchipa1 = 0;
+    this->scorEchipa2 = 0;
+    this->nrevenimente = 0;
+    this->minut = 0;
+}
+
+Meci::Meci(Echipa* echipa1, Echipa* echipa2) {
+    this->echipa1 = echipa1;
+    this->echipa2 = echipa2;
+    this->listaJucatori1 = new int[echipa1->getNrJucatori()];
+    this->listaJucatori2 = new int[echipa2->getNrJucatori()];
+    int i;
+    for (i = 0; i < echipa1->getNrJucatori(); i++)
+        this->listaJucatori1[i] = int(echipa1[i]);
+    for (i = 0; i < echipa2->getNrJucatori(); i++)
+        this->listaJucatori2[i] = int(echipa2[i]);
+    this->scorEchipa1 = 0;
+    this->scorEchipa2 = 0;
+    this->nrevenimente = 0;
+    this->minut = 0;
+}
+
+std::ostream& operator<<(std::ostream& out, const Meci& obj) {
+    out << obj.echipa1->getAbreviere() << ' ' << obj.scorEchipa1 << "        " << '-' << "        " << obj.scorEchipa2 << ' ' << obj.echipa2->getAbreviere();
+    out << "\n             " << obj.minut;
+    out << "\n---------------------------\n";
+    for (int i = 0; i < obj.nrevenimente; i++) {
+        out << "\n|";
+        out << "\n|" << obj.evenimente[i];
+    }
+    return out;
+}
+
+void Meci::simulareMeci() {
+    int c1r = 0, c2r = 0;
+    //srand(time(NULL));
+    for (int i = 0; i < this->echipa1[0].getNrJucatori(); i++)
+        this->echipa1[0][i][0].setCartonasRosu(false);
+    for (int i = 0; i < this->echipa2[0].getNrJucatori(); i++)
+        this->echipa2[0][i][0].setCartonasRosu(false);
+    if (this->echipa1[0].getNrJucatori() == 0 or this->echipa2[0].getNrJucatori() == 0)
+        std::cout << "Nu sunt destui jucatori pentru a incepe meciul!";
+    else
+    {
+        int i, event;
+        for (i = 0; i <= 90; i++)
+        {
+            this->minut = i;
+            event = rand() % 100;
+            if (event == 1 or event == 2)
+            {
+                this->scorEchipa1++;
+                int juc;
+                do {
+                    juc = rand() % this->echipa1->getNrJucatori();
+                } while (this->echipa1[0][juc]->getPozitie() == 'P' or this->echipa1[0][juc]->getCartonasRosu() == true);
+                char s[50 + sizeof(char)];
+                std::sprintf(s, "%d'GOL:", i);
+                strcpy(this->evenimente[this->nrevenimente], s);
+                strcat(this->evenimente[this->nrevenimente], this->echipa1[0][juc]->getNume().c_str());
+                strcat(this->evenimente[this->nrevenimente], "(");
+                strcat(this->evenimente[this->nrevenimente], this->echipa1->getAbreviere().c_str());
+                strcat(this->evenimente[this->nrevenimente], ")");
+                (*this->echipa1[0][juc])++;
+                this->nrevenimente++;
+            }
+            if (event == 3 or event == 4)
+            {
+                this->scorEchipa2++;
+                int juc;
+                do {
+                    juc = rand() % this->echipa2->getNrJucatori();
+                } while (this->echipa2[0][juc]->getPozitie() == 'P' or this->echipa2[0][juc]->getCartonasRosu() == true);
+                char s[50 + sizeof(char)];
+                std::sprintf(s, "%d'GOL:", i);
+                strcpy(this->evenimente[this->nrevenimente], s);
+                strcat(this->evenimente[this->nrevenimente], echipa2[0][juc]->getNume().c_str());
+                strcat(this->evenimente[this->nrevenimente], "(");
+                strcat(this->evenimente[this->nrevenimente], this->echipa2->getAbreviere().c_str());
+                strcat(this->evenimente[this->nrevenimente], ")");
+                (*this->echipa2[0][juc])++;
+                this->nrevenimente++;
+            }
+            if (event == 5 or event == 6) {
+                int juc;
+                do {
+                    juc = rand() % this->echipa1->getNrJucatori();
+                } while (this->echipa1[0][juc]->getCartonasRosu() == true);
+                char s[50 + sizeof(char)];
+                std::sprintf(s, "%d'CARTONAS GALBEN:", i);
+                strcpy(this->evenimente[this->nrevenimente], s);
+                strcat(this->evenimente[this->nrevenimente], this->echipa1[0][juc]->getNume().c_str());
+                strcat(this->evenimente[this->nrevenimente], "(");
+                strcat(this->evenimente[this->nrevenimente], this->echipa1->getAbreviere().c_str());
+                strcat(this->evenimente[this->nrevenimente], ")");
+                this->echipa2[0][juc][0].cresteCGalbene();
+                /*this->echipa1[0][juc][0].douaGalbene();
+                if (this->echipa1[0][juc][0].getCartonasRosu())
+                   event = 11;*/
+                this->nrevenimente++;
+            }
+            if (event == 8 or event == 9) {
+                int juc;
+                do {
+                    juc = rand() % this->echipa2->getNrJucatori();
+                } while (this->echipa2[0][juc]->getCartonasRosu() == true);
+                char s[50 + sizeof(char)];
+                std::sprintf(s, "%d'CARTONAS GALBEN:", i);
+                strcpy(this->evenimente[this->nrevenimente], s);
+                strcat(this->evenimente[this->nrevenimente], this->echipa2[0][juc]->getNume().c_str());
+                strcat(this->evenimente[this->nrevenimente], "(");
+                strcat(this->evenimente[this->nrevenimente], this->echipa2->getAbreviere().c_str());
+                strcat(this->evenimente[this->nrevenimente], ")");
+                this->echipa2[0][juc]->cresteCGalbene();
+                /*this->echipa2[0][juc][0].douaGalbene();
+                if (this->echipa2[0][juc][0].getCartonasRosu())
+                    event = 12;*/
+                this->nrevenimente++;
+            }
+            if (event == 11) {
+                int juc;
+                do {
+                    juc = rand() % this->echipa1->getNrJucatori();
+                } while (this->echipa1[0][juc]->getCartonasRosu() == true);
+                char s[50 + sizeof(char)];
+                std::sprintf(s, "%d'CARTONAS ROSU:", i);
+                strcpy(this->evenimente[this->nrevenimente], s);
+                strcat(this->evenimente[this->nrevenimente], this->echipa1[0][juc]->getNume().c_str());
+                strcat(this->evenimente[this->nrevenimente], "(");
+                strcat(this->evenimente[this->nrevenimente], this->echipa1->getAbreviere().c_str());
+                strcat(this->evenimente[this->nrevenimente], ")");
+                this->echipa1[0][juc]->setCartonasRosu(true);
+                this->echipa1[0][juc]->cresteCRosii();
+                c1r++;
+                this->nrevenimente++;
+            }
+            if (event == 12) {
+                int juc;
+                do {
+                    juc = rand() % this->echipa2->getNrJucatori();
+                } while (this->echipa2[0][juc]->getCartonasRosu() == true);
+                char s[50 + sizeof(char)];
+                std::sprintf(s, "%d'CARTONAS ROSU:", i);
+                strcpy(this->evenimente[this->nrevenimente], s);
+                strcat(this->evenimente[this->nrevenimente], this->echipa2[0][juc]->getNume().c_str());
+                strcat(this->evenimente[this->nrevenimente], "(");
+                strcat(this->evenimente[this->nrevenimente], this->echipa2->getAbreviere().c_str());
+                strcat(this->evenimente[this->nrevenimente], ")");
+                this->echipa2[0][juc]->setCartonasRosu(true);
+                this->echipa2[0][juc]->cresteCRosii();
+                c2r++;
+                this->nrevenimente++;
+            }
+            Sleep(400);
+            system("CLS");
+            if (c1r == this->echipa1[0].getNrJucatori())
+            {
+                this->scorEchipa2 = 3;
+                this->scorEchipa1 = 0;
+                this->echipa2[0].cresteVictorii();
+                this->echipa2[0].calculPuncte();
+                std::cout << (*this);
+                std::cout << "\nMeci oprit din cauza lipsei de jucatori disponibili in echipa " << this->echipa1->getAbreviere() << '\n';
+                return;
+            }
+            if (c2r == this->echipa2[0].getNrJucatori())
+            {
+                this->scorEchipa1 = 3;
+                this->scorEchipa2 = 0;
+                this->echipa1[0].cresteVictorii();
+                this->echipa1[0].calculPuncte();
+                std::cout << (*this);
+                std::cout << "\nMeci oprit din cauza lipsei de jucatori disponibili in echipa " << this->echipa2->getAbreviere() << '\n';
+                return;
+            }
+            std::cout << (*this);
+        }
+        for (i = 0; i < this->echipa1[0].getNrJucatori(); i++)
+            this->echipa1[0][i][0].setCartonasRosu(false);
+        for (i = 0; i < this->echipa2[0].getNrJucatori(); i++)
+            this->echipa2[0][i][0].setCartonasRosu(false);
+        this->echipa1[0].cresteGolaveraj(this->scorEchipa1 - this->scorEchipa2);
+        this->echipa2[0].cresteGolaveraj(this->scorEchipa2 - this->scorEchipa1);
+        if (this->scorEchipa1 > this->scorEchipa2) {
+            this->echipa1[0].cresteVictorii();
+            this->echipa1[0].calculPuncte();
+            this->echipa2[0].cresteInfrangeri();
+        }
+        else
+            if (this->scorEchipa1 < this->scorEchipa2) {
+                this->echipa2[0].cresteVictorii();
+                this->echipa2[0].calculPuncte();
+                this->echipa1[0].cresteInfrangeri();
+            }
+            else {
+                this->echipa1[0].cresteEgaluri();
+                this->echipa2[0].cresteEgaluri();
+                this->echipa1[0].calculPuncte();
+                this->echipa2[0].calculPuncte();
+            }
+    }
+}
+
+Meci::~Meci() {
+    if (this->echipa1 != NULL) {
+        //delete this->echipa1;
+        this->echipa1 = NULL;
+    }
+    if (this->echipa2 != NULL) {
+        //delete this->echipa2;
+        this->echipa2 = NULL;
+    }
+    if (this->listaJucatori1 != NULL) {
+        delete[] this->listaJucatori1;
+        this->listaJucatori1 = NULL;
+    }
+    if (this->listaJucatori2 != NULL) {
+        delete[] this->listaJucatori2;
+        this->listaJucatori2 = NULL;
+    }
+}
+
+void Meniu() {
+    Competitie* comp;
+    int n, numarCompetitii, k, i, l, e, j, e2;
+    std::cout << "Bine ati venit!\nApasati orice tasta pentru a crea o liga\n";
+    std::cin >> n;
+    system("CLS");
+    numarCompetitii = 1;
+    comp = new Competitie[numarCompetitii];
+    std::cin >> comp[0];
+    while (true) {
+        system("CLS");
+        std::cout << "Meniu ligi 0\nMeniu echipe 1\nMeniu jucatori 2\nSimulare meci 3\nExit 4\n";
+        std::cin >> k;
+        if (k == 4)
+            break;
+        while (true) {
+            system("CLS");
+            for (i = 0; i < numarCompetitii; i++) {
+                std::cout << comp[i].getDenumire() << " " << i << '\n';
+            }
+            std::cout << "Inapoi " << i<<'\n';
+            std::cin >> l;
+            if (l == i)
+                break;
+            if (k == 0) {
+                while (true) {
+                    system("CLS");
+                    std::cout << "Adaugare o competitie noua 0\nAdaugati o echipa in competitia curenta 1\nVizualizare clasamentul competitiei curenta 2\nInapoi 3\n";
+                    int o;
+                    std::cin >> o;
+                    if (o == 0) {
+                        system("CLS");
+                        Competitie* copie;
+                        copie = new Competitie[numarCompetitii + 1];
+                        for (i = 0; i < numarCompetitii; i++)
+                            copie[i] = comp[i];
+                        std::cin >> copie[i];
+                        delete[] comp;
+                        comp = NULL;
+                        comp = new Competitie[numarCompetitii + 1];
+                        numarCompetitii++;
+                        for (i = 0; i < numarCompetitii; i++)
+                            comp[i] = copie[i];
+                        delete[]copie;
+                        copie = NULL;
+                    }
+                    if (o == 1) {
+                        system("CLS");
+                        comp[l]++;
+                    }
+                    if (o == 2) {
+                        system("CLS");
+                        comp[l].clasament();
+                        std::cout << "Pentru a iesi apasati orice tasta\n";
+                        int t;
+                        std::cin >> t;
+                    }
+                    if (o == 3) {
+                        break;
+                    }
+                }
+            }
+            else {
+                while (true) {
+                    system("CLS");
+                    int t;
+                    for (t = 0; t < comp[l].getNrEchipe(); t++) {
+                        std::cout << comp[l][t]->getNumeEchipa() << " " << t << '\n';
+                    }
+                    std::cout << "Inapoi " << t<<'\n';
+                    std::cin >> e;
+                    if (e == t)
+                        break;
+                    if (k == 1) {
+                        int o2;
+                        while (true) {
+                            system("CLS");
+                            std::cout << "Vizualizare echipa 0\nAdaugare jucator 1\nEliminare jucator 2\nStergeti echipa 3\nInapoi 4\n";
+                            std::cin >> o2;
+                            if (o2 == 4)
+                                break;
+                            if (o2 == 0) {
+                                system("CLS");
+                                std::cout << *comp[l][e];
+                                std::cout << "\nPentru a iesi apasati orice tasta\n";
+                                int t2;
+                                std::cin >> t2;
+                            }
+                            if (o2 == 1) {
+                                system("CLS");
+                                (*comp[l][e])++;
+                            }
+                            if (o2 == 2) {
+                                system("CLS");
+                                for (j = 0; j < comp[l][e]->getNrJucatori(); j++) {
+                                    std::cout << comp[l][e][0][j]->getNume() << " " << comp[l][e][0][j]->getPrenume() << " " << j << '\n';
+                                }
+                                int j1;
+                                std::cin >> j1;
+                                if (j1 == j)
+                                    break;
+                                *comp[l][e] = *comp[l][e] - *comp[l][e][0][j1];
+                            }
+                            if (o2 == 3) {
+                                comp[l] = comp[l] - *comp[l][e];
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                    if (k == 3) {
+                        system("CLS");
+                        std::cout << "Selectati si a doua echipa:\n";
+                        for (t = 0; t < comp[l].getNrEchipe(); t++) {
+                            if (t != e)
+                                std::cout << comp[l][t]->getNumeEchipa() << " " << t << '\n';
+                        }
+                        std::cin >> e2;
+                        Meci m(comp[l][e], comp[l][e2]);
+                        m.simulareMeci();
+                        std::cout << "\nPentru a iesi apasati orice tasta\n";
+                        int t2;
+                        std::cin >> t2;
+                    }
+                    else {
+                        while (true) {
+                            system("CLS");
+                            for (j = 0; j < comp[l][e]->getNrJucatori(); j++) {
+                                std::cout << comp[l][e][0][j]->getNume() << " " << comp[l][e][0][j]->getPrenume() << " " << j << '\n';
+                            }
+                            std::cout << "Inapoi " << j << '\n';
+                            int j1;
+                            std::cin >> j1;
+                            if (j1 == j)
+                                break;
+                            if (k == 2) {
+                                while (true) {
+                                    system("CLS");
+                                    std::cout << *comp[l][e][0][j1];
+                                    std::cout << "\nPentru a iesi apasati orice tasta\n";
+                                    int t2;
+                                    std::cin >> t2;
+                                    break;
+                                }
+
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    delete[] comp;
+    comp = NULL;
+}
+
 int main()
 {
-    Echipa a, b;
-    std::cin >> a;
-    system("CLS");
-    std::cin >> b;
-    system("CLS");
-    std::cout << a - b;
+    Meniu();
     return 0;
 }
